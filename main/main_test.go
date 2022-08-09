@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 )
 
 func Test_reflect(t *testing.T) {
@@ -27,4 +28,12 @@ func Test_reflect(t *testing.T) {
 			strings.Join(argv, ","),
 			strings.Join(returns, ","))
 	}
+}
+
+func Test_timeAfter(t *testing.T) {
+	t.Log(time.Now())
+	tchan := time.After(time.Second * 3)
+	t.Log(time.Now())
+	t.Log("get", <-tchan)
+	t.Log(time.Now())
 }
