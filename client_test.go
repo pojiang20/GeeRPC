@@ -59,9 +59,10 @@ func TestClient_Call(t *testing.T) {
 		err := client.Call(ctx, "Bar.Timeout", 1, &reply)
 		_assert(err != nil && strings.Contains(err.Error(), ctx.Err().Error()), "expect a timeout error")
 	})
+	//客户端请求Bar.Timeout调用，服务器端执行需要2s
 	t.Run("server handle timeout", func(t *testing.T) {
 		client, _ := Dial("tcp", addr, &Option{
-			//HandleTimeout: time.Second,
+			HandleTimeout: time.Second * 10,
 		})
 		var reply int
 		err := client.Call(context.Background(), "Bar.Timeout", 1, &reply)

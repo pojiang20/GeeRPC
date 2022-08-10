@@ -103,12 +103,12 @@ func (server *Server) ServeConn(conn io.ReadWriteCloser) {
 		log.Printf("rpc server: invalid codec type %s", opt.CodecType)
 		return
 	}
-	server.serveCodec(f(conn))
+	server.serveCodec(f(conn), &opt)
 }
 
 var invalidRequest = struct{}{}
 
-func (server *Server) serveCodec(cc codec.Codec) {
+func (server *Server) serveCodec(cc codec.Codec, opt *Option) {
 	sending := new(sync.Mutex)
 	wg := new(sync.WaitGroup)
 	for {
@@ -124,7 +124,7 @@ func (server *Server) serveCodec(cc codec.Codec) {
 		}
 		wg.Add(1)
 		//处理请求
-		go server.handleRequest(cc, req, sending, wg, time.Second*2)
+		go server.handleRequest(cc, req, sending, wg, opt.HandleTimeout)
 	}
 	wg.Wait()
 	_ = cc.Close()
@@ -193,6 +193,7 @@ func (server *Server) handleRequest(cc codec.Codec, req *request, sending *sync.
 			return
 		}
 		server.sendResponse(cc, req.h, req.replyv.Interface(), sending)
+		//执行完成后触发sent，表示服务已响应
 		sent <- struct{}{}
 	}()
 
@@ -206,9 +207,9 @@ func (server *Server) handleRequest(cc codec.Codec, req *request, sending *sync.
 	case <-time.After(timeout):
 		req.h.Error = fmt.Sprintf("rpc server: request handle timeout: expect within %s", timeout)
 		server.sendResponse(cc, req.h, invalidRequest, sending)
-		//如果called信道接受到消息
+	//表示执行了call
 	case <-called:
-		//则继续执行sent
+		//表示执行完call且回复
 		<-sent
 
 	}

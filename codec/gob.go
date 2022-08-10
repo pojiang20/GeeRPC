@@ -35,8 +35,10 @@ func (c *GobCodec) ReadBody(body interface{}) error {
 	return c.dec.Decode(body)
 }
 
+//编码并发送请求
 func (c *GobCodec) Write(h *Header, body interface{}) (err error) {
 	defer func() {
+		//Flush就是将buf的内容写入conn，即发送http请求
 		_ = c.buf.Flush()
 		if err != nil {
 			_ = c.Close()
