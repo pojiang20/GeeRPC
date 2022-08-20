@@ -2,6 +2,7 @@ package xclient
 
 import (
 	"context"
+	"errors"
 	. "geerpc"
 	"io"
 	"log"
@@ -95,11 +96,12 @@ func (xc *XClient) Broadcast(ctx context.Context, serviceMethod string, args, re
 			}
 			err := xc.call(rpcAddr, ctx, serviceMethod, args, clonedReply)
 			mu.Lock()
-			//e保证了单次调用，只要有一个错误，则终结所有服务
+			//一个错误，则终结所有服务
 			if err != nil && e == nil {
-				e = err
+				e = errors.New(rpcAddr + err.Error())
 				cancel()
 			}
+			//一个正常返回则返回
 			if err == nil && !replyDone {
 				reflect.ValueOf(reply).Elem().Set(reflect.ValueOf(clonedReply).Elem())
 				replyDone = true

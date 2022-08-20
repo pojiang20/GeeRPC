@@ -200,6 +200,7 @@ func dialTimeout(f newClientFunc, network, address string, opts ...*Option) (cli
 		client, err := f(conn, opt)
 		ch <- clientResult{client: client, err: err}
 	}()
+	//一直等待直到有结果
 	if opt.ConnectTimeout == 0 {
 		result := <-ch
 		return result.client, result.err
