@@ -104,6 +104,7 @@ func (client *Client) receive() {
 			err = client.cc.ReadHeader(nil)
 			call.done()
 		default:
+			//从conn中读取内容写入到Reply
 			err = client.cc.ReadBody(call.Reply)
 			if err != nil {
 				call.Error = errors.New("reading body " + err.Error())
@@ -186,8 +187,8 @@ func (client *Client) send(call *Call) {
 	client.header.Seq = seq
 	client.header.Error = ""
 
-	if err := client.cc.Write(&client.header, call.Args); err != nil {
-		call := client.removeCall(seq)
+	if err = client.cc.Write(&client.header, call.Args); err != nil {
+		call = client.removeCall(seq)
 		if call != nil {
 			call.Error = err
 			call.done()
